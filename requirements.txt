@@ -1,0 +1,9 @@
+pandas
+pillow
+requests
+streamlit
+scikit-learn
+opencv-python-headless
+numpy
+streamlit-webrtc
+python-dotenv
