@@ -7,31 +7,25 @@ import os
 from dotenv import load_dotenv
 
 def get_ice_servers():
-    load_dotenv()
-
-    account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-    auth_token = os.getenv('TWILIO_AUTH_TOKEN')
-
-    if account_sid and auth_token:
-        # Llamada a la API de Twilio para obtener tokens TURN
+    """Obtiene credenciales TURN de Twilio"""
+    try:
+        # Leer credenciales desde secrets
+        account_sid = st.secrets["twilio"]["account_sid"]
+        auth_token = st.secrets["twilio"]["auth_token"]
+        
+        # Llamada a la API de Twilio
         url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Tokens.json"
-        try:
-            response = requests.post(url, auth=(account_sid, auth_token), timeout=10)
-            if response.status_code in (200, 201):
-                token_data = response.json()
-                return token_data.get('ice_servers', [])
-            else:
-                st.warning(f"No se pudo obtener ICE servers de Twilio (status {response.status_code}). Usando STUN público.")
-        except Exception as e:
-            st.warning(f"Error contactando Twilio: {e}. Usando STUN público.")
-
-    else:
-        st.info("TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN no encontrados en variables de entorno; usando STUN público.")
-
-    # Fallback a servidores STUN públicos
-    return [
-        {"urls": ["stun:stun.l.google.com:19302"]},
-    ]
+        response = requests.post(url, auth=(account_sid, auth_token))
+        
+        if response.status_code == 201:
+            token_data = response.json()
+            return token_data['ice_servers']
+        else:
+            st.warning("No se pudieron obtener servidores TURN, usando STUN público")
+            return [{"urls": ["stun:stun.l.google.com:19302"]}]
+    except Exception as e:
+        st.error(f"Error obteniendo servidores: {e}")
+        return [{"urls": ["stun:stun.l.google.com:19302"]}]
 
 def video_frame_callback(frame):
     img = frame.to_ndarray(format="bgr24")
