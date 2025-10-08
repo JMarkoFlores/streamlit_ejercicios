@@ -26,64 +26,61 @@ def get_ice_servers():
         return [{"urls": ["stun:stun.l.google.com:19302"]}]
 
 
-# Inicializar variables en session_state
-if 'prev_frame' not in st.session_state:
-    st.session_state.prev_frame = None
-if 'cur_frame' not in st.session_state:
-    st.session_state.cur_frame = None
+# Variables globales para almacenar frames
+prev_frame = None
+cur_frame = None
 
 
-class VideoProcessor:
-    """Clase para procesar video con detección de movimiento"""
+def video_frame_callback(frame):
+    """Callback para mostrar solo la máscara de movimiento (contornos blancos)"""
+    global prev_frame, cur_frame
     
-    def recv(self, frame):
-        """Método que procesa cada frame"""
-        try:
-            # Convertir frame a numpy array
-            img = frame.to_ndarray(format="bgr24")
-            
-            # Convertir a escala de grises
-            next_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            
-            # Si no tenemos suficientes frames, mostrar pantalla negra
-            if st.session_state.prev_frame is None:
-                st.session_state.prev_frame = next_frame
-                black_frame = np.zeros_like(img)
-                return av.VideoFrame.from_ndarray(black_frame, format="bgr24")
-            
-            if st.session_state.cur_frame is None:
-                st.session_state.cur_frame = next_frame
-                black_frame = np.zeros_like(img)
-                return av.VideoFrame.from_ndarray(black_frame, format="bgr24")
-            
-            # Calcular diferencias entre frames (ALGORITMO DE DIFERENCIACIÓN)
-            diff1 = cv2.absdiff(next_frame, st.session_state.cur_frame)
-            diff2 = cv2.absdiff(st.session_state.cur_frame, st.session_state.prev_frame)
-            
-            # Operación AND bit a bit - NÚCLEO DEL ALGORITMO
-            motion_mask = cv2.bitwise_and(diff1, diff2)
-            
-            # Aplicar umbral para limpiar ruido
-            _, motion_mask = cv2.threshold(motion_mask, 30, 255, cv2.THRESH_BINARY)
-            
-            # Convertir máscara a BGR para visualización
-            motion_display = cv2.cvtColor(motion_mask, cv2.COLOR_GRAY2BGR)
-            
-            # Actualizar frames para siguiente iteración
-            st.session_state.prev_frame = st.session_state.cur_frame
-            st.session_state.cur_frame = next_frame
-            
-            # Retornar SOLO la máscara de movimiento (fondo negro, contornos blancos)
-            return av.VideoFrame.from_ndarray(motion_display, format="bgr24")
-            
-        except Exception as e:
-            print(f"Error en callback: {e}")
-            # En caso de error, retornar frame negro
+    try:
+        # Convertir frame a numpy array
+        img = frame.to_ndarray(format="bgr24")
+        
+        # Convertir a escala de grises
+        next_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        # Si no tenemos suficientes frames, mostrar pantalla negra
+        if prev_frame is None:
+            prev_frame = next_frame
             black_frame = np.zeros_like(img)
             return av.VideoFrame.from_ndarray(black_frame, format="bgr24")
+        
+        if cur_frame is None:
+            cur_frame = next_frame
+            black_frame = np.zeros_like(img)
+            return av.VideoFrame.from_ndarray(black_frame, format="bgr24")
+        
+        # Calcular diferencias entre frames (ALGORITMO DE DIFERENCIACIÓN)
+        diff1 = cv2.absdiff(next_frame, cur_frame)
+        diff2 = cv2.absdiff(cur_frame, prev_frame)
+        
+        # Operación AND bit a bit - NÚCLEO DEL ALGORITMO
+        motion_mask = cv2.bitwise_and(diff1, diff2)
+        
+        # Aplicar umbral para limpiar ruido
+        _, motion_mask = cv2.threshold(motion_mask, 30, 255, cv2.THRESH_BINARY)
+        
+        # Convertir máscara a BGR para visualización
+        motion_display = cv2.cvtColor(motion_mask, cv2.COLOR_GRAY2BGR)
+        
+        # Actualizar frames para siguiente iteración
+        prev_frame = cur_frame
+        cur_frame = next_frame
+        
+        # Retornar SOLO la máscara de movimiento (fondo negro, contornos blancos)
+        return av.VideoFrame.from_ndarray(motion_display, format="bgr24")
+        
+    except Exception as e:
+        print(f"Error en callback: {e}")
+        return frame
 
 
 def mostrar_ejer08():
+    global prev_frame, cur_frame
+    
     st.markdown(
         """
         <h2 style="text-align: center; font-weight: bold; font-size: 28px; color: #333;">
@@ -98,14 +95,7 @@ def mostrar_ejer08():
     Este algoritmo muestra **solo los contornos blancos** del movimiento detectado:
     - **Fondo negro**: Áreas sin movimiento
     - **Contornos blancos**: Áreas donde se detectó cambio entre frames
-    - Compara 3 frames consecutivos usando diferencias absolutas
     """)
-    
-    # Botón para reiniciar
-    if st.button("🔄 Reiniciar Detector"):
-        st.session_state.prev_frame = None
-        st.session_state.cur_frame = None
-        st.success("✅ Detector reiniciado")
     
     # Obtener servidores ICE
     ice_servers = get_ice_servers()
@@ -114,7 +104,7 @@ def mostrar_ejer08():
     # Streamer de video
     webrtc_ctx = webrtc_streamer(
         key="motion_detection",
-        video_processor_factory=VideoProcessor,
+        video_frame_callback=video_frame_callback,
         rtc_configuration=RTC_CONFIGURATION,
         media_stream_constraints={
             "video": {
@@ -134,7 +124,7 @@ def mostrar_ejer08():
         st.info("📷 Presiona START para ver la diferenciación de frames")
     
     # Explicación técnica
-    with st.expander("🔬 Cómo funciona el algoritmo"):
-        st.markdown("""
-        **Algoritmo de Diferenciación de Frames:**
-        """)
+    # with st.expander("🔬 Cómo funciona el algoritmo"):
+    #     st.markdown("""
+    #     **Algoritmo de Diferenciación de Frames:**
+    #     """)
