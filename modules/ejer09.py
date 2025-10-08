@@ -73,7 +73,7 @@ def mostrar_ejer09():
         
         # Crear dos columnas para los parámetros
         #col1, col2 = st.columns(2)
-        col1 = st.columns(1)
+        col1 = st.columns(1)[0]
         
         with col1:
             st.subheader("⚙️ Parámetros Dense Detector")
