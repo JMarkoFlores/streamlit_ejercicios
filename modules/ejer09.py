@@ -67,12 +67,13 @@ def mostrar_ejer09():
         input_image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
         
         # Mostrar imagen original
-        st.subheader("📷 Imagen Original")
-        image_rgb = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
-        st.image(image_rgb, use_container_width=True)
+        #st.subheader("📷 Imagen Original")
+        #image_rgb = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
+        #st.image(image_rgb, use_container_width=True)
         
         # Crear dos columnas para los parámetros
-        col1, col2 = st.columns(2)
+        #col1, col2 = st.columns(2)
+        col1 = st.columns(1)
         
         with col1:
             st.subheader("⚙️ Parámetros Dense Detector")
@@ -80,14 +81,14 @@ def mostrar_ejer09():
             feature_scale = st.slider("Feature Scale", 5, 50, 20, help="Distancia entre keypoints")
             img_bound = st.slider("Image Bound", 0, 50, 5, help="Margen desde el borde")
         
-        with col2:
-            st.subheader("🔍 Información")
-            st.info(f"""
-            **Dense Detector**
-            - Step Size: {step_size}
-            - Feature Scale: {feature_scale}
-            - Image Bound: {img_bound}
-            """)
+        # with col2:
+        #     st.subheader("🔍 Información")
+        #     st.info(f"""
+        #     **Dense Detector**
+        #     - Step Size: {step_size}
+        #     - Feature Scale: {feature_scale}
+        #     - Image Bound: {img_bound}
+        #     """)
         
         # Botón para procesar
         if st.button("🚀 Detectar Características", type="primary"):
