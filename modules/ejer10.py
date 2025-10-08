@@ -137,7 +137,7 @@ def mostrar_ejer10():
     st.markdown(
         """
         <h2 style="text-align: center; font-weight: bold; font-size: 28px; color: #333;">
-            Capítulo 10: Realidad Aumentada - Gorro Virtual
+            Capítulo 10: Implementando Realidad Aumentada
         </h2>
         """,
         unsafe_allow_html=True

@@ -103,7 +103,7 @@ def mostrar_ejer11():
     # Solo mostrar el botón si hay una imagen subida
     if uploaded_file is not None:
         # Mostrar vista previa de la imagen (sin guardar)
-        st.image(uploaded_file, caption="Imagen subida", use_column_width=True)
+        #st.image(uploaded_file, caption="Imagen subida", use_column_width=True)
         
         if st.button("Enviar Imagen"):
             # Hacer predicción directamente desde memoria (SIN GUARDAR)
